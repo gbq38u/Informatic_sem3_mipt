@@ -10,3 +10,20 @@
 Продумать протокол очистки файла.
 Исследовать вопрос с уникальностью идентификаторов.
 */
+
+
+#include <stdint.h>
+#include <time.h>
+
+#define USER_SIZE 32
+#define TEXT_SIZE 512
+
+typedef struct {
+    uint64_t id;                 /* уникальный номер сообщения */
+    time_t created_at;           /* время отправки */
+    char sender[USER_SIZE];      /* отправитель */
+    char recipient[USER_SIZE];   /* получатель */
+    char text[TEXT_SIZE];        /* текст */
+    int delivered;               /* 0 — новое, 1 — прочитано */
+} Message;
+
