@@ -29,7 +29,7 @@ int main()
   }
   
   /* Пытаемся найти разделяемую память по сгенерированному ключу */
-  if((shmid = shmget(key, SIZE, 0666|IPC_CREAT)) < 0)
+  if((shmid = shmget(key, SIZE, 0666)) < 0)
   {
     printf("Can\'t create shared memory\n");
     exit(-1);

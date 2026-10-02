@@ -1,29 +1,66 @@
-/* разобраться как работает, написать комментарии,
-   в том числе ко всем параметрам. */
 #include <sys/shm.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-int main (int argc, char ** argv)
+
+ /* argc — количество аргументов командной строки;
+ * argv массив строк с аргументами:
+ * argv[0] содержит название программы
+ * argv[1] должен содержать ID разделяемой памяти*/
+int main(int argc, char **argv)
 {
-  int shm_id;
-  char * shm_buf;
-  
-  if (argc < 2) 
-  {
-  	fprintf (stderr, "Too few arguments\n");
-  	return 1;
-  }
-  
-  shm_id = argv[1];
-  shm_buf = (char *) shmat (shm_id, 0, 0);
-  if (shm_buf == (char *) ***) 
-  {
-  	fprintf (stderr, "shmat() error\n");
-  	return 1;
-  }
-  
-  printf ("Message: %s\n", shm_buf);
-  shmdt (shm_buf);
-  
-  return 0;
+    //xисловой идентификатор области разделяемой памяти 
+    int shm_id;
+
+    // указатель на подключённую разделяемую память 
+    char *shm_buf;
+
+    
+     // должно быть как минимум два элемента
+    if (argc < 2)
+    {
+        fprintf(stderr, "Usage: %s <shared_memory_id>\n", argv[0]);
+        return 1;
+    }
+
+    // atoi() преобразует строку argv[1] в целое число
+
+    shm_id = atoi(argv[1]);
+
+    
+     /* одключаем существующую область разделяемой памяти
+     * shm_id идентификатор памяти, полученный от программы 3;
+     * NULL  адрес подключения выбирает операционная система;
+     * 0  подключить память с возможностью чтения и записи
+     * при успехе shmat() возвращает адрес памяти, при ошибке возвращает (void *)-1*/
+    shm_buf = (char *)shmat(
+        shm_id,
+        NULL,
+        0
+    );
+
+    if (shm_buf == (void *)-1)
+    {
+        perror("shmat");
+        return 1;
+    }
+
+    
+     // shm_buf указывает на строку, которую программа 3 записала в разделяемую память
+     //%s  ывести строку
+     // shm_buf — адрес начала строки
+     
+    printf("Message: %s\n", shm_buf);
+
+    // отключаем разделяемую память
+     
+     //shm_buf -адрес возвращённый функцией shmat()
+     
+    if (shmdt(shm_buf) == -1)
+    {
+        perror("shmdt");
+        return 1;
+    }
+
+    return 0;
 }
