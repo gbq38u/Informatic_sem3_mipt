@@ -2,32 +2,88 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <stdio.h>
-// Написать комментарии, отладить работу
+#include <stdlib.h>
+
+/*
+ * программа создаёт или открывает семафор
+ * после этого она ожидает пока другая программа увеличит его значение
+ */
 int main(int argc, char *argv[], char *envp[])
 {
-  int   semid;
-  char pathname[]="1_sem.c";
-  key_t key;
-  struct sembuf mybuf;
-  
-  key = ftok(pathname, 0);
-  
-  if((semid = semget(key, 1, 0666 | IPC_CREATE)) < 0)
-  {
-    printf("Can\'t create semaphore set\n");
-    exit(-1);
-  }
-  
-  mybuf.sem_num = 0;
-  mybuf.sem_op  = -1;
-  mybuf.sem_flg = 0;
-  
-  if(semop(semid, &mybuf, 1) < 0)
-  {
-    printf("Can\'t wait for condition\n");
-    exit(-1);
-  }  
-    
-  printf("The condition is present\n");
-  return 0;
+    /* argc хранит количество аргументов командной строки */
+    /* argv хранит аргументы командной строки */
+    /* envp хранит переменные окружения */
+    (void)argc;
+    (void)argv;
+    (void)envp;
+
+    /* идентификатор набора семафоров */
+    int semid;
+
+    /*
+     * имя существующего файла для создания ipc ключа
+     * файл 1_sem.c должен находиться в текущей директории
+     */
+    char pathname[] = "1_sem.c";
+
+    /* ipc ключ */
+    key_t key;
+
+    /* структура с описанием операции над семафором */
+    struct sembuf mybuf;
+
+    /*
+     * pathname указывает на существующий файл
+     * 0 задаёт дополнительный номер проекта
+     * обе взаимодействующие программы должны использовать одинаковые параметры
+     */
+    key = ftok(pathname, 0);
+
+    /* ftok возвращает -1 если ключ создать не удалось */
+    if (key == (key_t)-1)
+    {
+        perror("ftok");
+        return EXIT_FAILURE;
+    }
+
+    /*
+     * key задаёт ключ набора семафоров
+     * 1 задаёт количество семафоров в наборе
+     * 0666 разрешает чтение и изменение всем пользователям
+     * IPC_CREAT создаёт набор если он ещё не существует
+     */
+    semid = semget(key, 1, 0666 | IPC_CREAT);
+
+    /* semget возвращает -1 при ошибке */
+    if (semid == -1)
+    {
+        perror("semget");
+        return EXIT_FAILURE;
+    }
+
+    /*
+     * 0 задаёт первый семафор в наборе
+     * -1 уменьшает значение семафора на единицу
+     * если значение равно нулю процесс будет ожидать
+     * 0 означает выполнение без дополнительных флагов
+     */
+    mybuf.sem_num = 0;
+    mybuf.sem_op = -1;
+    mybuf.sem_flg = 0;
+
+    /*
+     * semid задаёт набор семафоров
+     * &mybuf указывает на выполняемую операцию
+     * 1 задаёт количество операций
+     */
+    if (semop(semid, &mybuf, 1) == -1)
+    {
+        perror("semop");
+        return EXIT_FAILURE;
+    }
+
+    /* эта строка появится после увеличения семафора другой программой */
+    printf("The condition is present\n");
+
+    return EXIT_SUCCESS;
 }
